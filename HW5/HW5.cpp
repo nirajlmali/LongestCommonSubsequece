@@ -2,10 +2,13 @@
 //
 
 #include <iostream>
+#include <chrono>
+#include <tbb/tbb.h>
 
 using namespace std;
+using namespace tbb;
 
-void serialLCS(string A, string B) {
+string serialLCS(string A, string B) {
 	//Size of each
 	int m = A.length();
 	int n = B.length();
@@ -20,18 +23,6 @@ void serialLCS(string A, string B) {
 	{
 		L[i] = new string[n + 1];
 	}
-
-	//for (int i = 0; i < m; i++) {
-	//	for (int j = 0; j < n; j++) {
-	//		L[i][j] = 'A';
-	//	}
-	//}
-
-	//for (int i = 0; i < m; i++) {
-	//	for (int j = 0; j < n; j++) {
-	//		cout << L[i][j];
-	//	}
-	//}
 
 	/* Careful of i-1, j-1 < 0! */
 	for (int i = 0; i < m + 1; i++) {
@@ -51,16 +42,9 @@ void serialLCS(string A, string B) {
 				else
 					L[i][j] = L[i - 1][j];
 			}
-			cout << L[i][j] << "\n";
 		}
 	}
-	cout << "Final Table";
-	for (int i = 0; i < m + 1; i++) {
-		for (int j = 0; j < n + 1; j++) {
-			cout << L[i][j] << " ";
-		}
-		cout << "\n";
-	}
+	return L[m][n];
 }
 
 //Parallelized
@@ -81,50 +65,70 @@ void parallelLCS(string A, string B) {
 		L[i] = new string[n + 1];
 	}
 
-	//Locks? L[0][0], L[1][0], L[0][1] are our initial cases
+	////Locks? L[0][0], L[1][0], L[0][1] are our initial cases
 
-	//Threadex.
-	//TODO launch 3 threads?
-	/*std::thread th1(insertintosl, &list, 5000);
-	std::thread th2(insertintosl, &list, 5000);
-	std::thread th3(searchskiplist, &list);*/
+	////Threadex.
+	////TODO launch 3 threads?
+	///*std::thread th1(insertintosl, &list, 5000);
+	//std::thread th2(insertintosl, &list, 5000);
+	//std::thread th3(searchskiplist, &list);*/
 
-	/* Careful of i-1, j-1 < 0! */
-	for (int i = 0; i < m + 1; i++) {
-		for (int j = 0; j < n + 1; j++) {
-			if (i <= 0 || j <= 0) {
-				L[i][j] = "";
-			}
-			else if (A[i - 1] == B[j - 1]) {
-				/* L[i,j] = L(A_i, B_j) */
-				L[i][j] = L[i - 1][j - 1] + "" + A[i - 1]; // Concatenate A[i] to L[i-1,j-1]
-			}
-			else {
-				len1 = L[i][j - 1].length();
-				len2 = L[i - 1][j].length();
-				if (len1 > len2)
-					L[i][j] = L[i][j - 1];
-				else
-					L[i][j] = L[i - 1][j];
-			}
-			cout << L[i][j] << "\n";
-		}
+	//Step 1. Find the amount of hyperplanes/diagonals
+	int largerDim = max(m, n);
+	int smallerDim = min(m, n);
+	int numDiagonals = largerDim + smallerDim - 1;
+
+	//Step 2. Loop through each diagonal in serial. This allows no need for locks since it needs to go throught the diagonals in order.
+	for (int i = 0; i < numDiagonals; i++)
+	{
+		//Step 3. Parallel_for through coordinates on the current diagonal
+		parallel_for(blocked_range2d<int, int>(0, m, 0, n), [=](const blocked_range<int>& r) {
+			});
+
 	}
-	cout << "Final Table";
-	for (int i = 0; i < m + 1; i++) {
-		for (int j = 0; j < n + 1; j++) {
-			cout << L[i][j] << " ";
-		}
-		cout << "\n";
-	}
+
+	/////* Careful of i-1, j-1 < 0! */
+	////parallel_for(blocked_range2d<int, int>(0, m, 0, n), [=](const blocked_range<int>& r) {
+	////	
+	////}
+	//for (int i = 0; i < m + 1; i++) {
+	//	for (int j = 0; j < n + 1; j++) {
+	//		if (i <= 0 || j <= 0) {
+	//			L[i][j] = "";
+	//		}
+	//		else if (A[i - 1] == B[j - 1]) {
+	//			/* L[i,j] = L(A_i, B_j) */
+	//			L[i][j] = L[i - 1][j - 1] + "" + A[i - 1]; // Concatenate A[i] to L[i-1,j-1]
+	//		}
+	//		else {
+	//			len1 = L[i][j - 1].length();
+	//			len2 = L[i - 1][j].length();
+	//			if (len1 > len2)
+	//				L[i][j] = L[i][j - 1];
+	//			else
+	//				L[i][j] = L[i - 1][j];
+	//		}
+	//		cout << L[i][j] << "\n";
+	//	}
+	//}
+	//return L[m][n];
 }
 
 
-int main()
+int main(int argc, char* argv[])
 {
 	char A[] = "ABXTC";
 	char B[] = "AGXT";
-	serialLCS(A, B);
+
+	cout << "Enter File: ";
+	string fileName;
+	cin >> fileName;
+
+	auto start = std::chrono::high_resolution_clock::now();
+	string LCSRes1 = serialLCS(A, B);
+	auto finish = std::chrono::high_resolution_clock::now();	chrono::duration<double> elapsed = finish - start;
+	cout << "Result in " << elapsed.count() << "s\n";
+	cout << "LCS: " << LCSRes1;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
