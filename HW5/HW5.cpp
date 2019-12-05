@@ -5,47 +5,68 @@
 
 using namespace std;
 
-void serialLCS(char A[], char B[]) {
+void serialLCS(string A, string B) {
 	//Size of each
-	int m = sizeof(A) / sizeof(A[0]);
-	int n = sizeof(B) / sizeof(B[0]);
+	int m = A.length();
+	int n = B.length();
 
 	//Length of each current subsequence
 	int len1 = 0;
 	int len2 = 0;
 
 	//L - Data Structure made up of subsequences
-	char *L[2];
-	L[0] = A;
-	L[1] = B;
+	string** L = new string*[m + 1];
+	for (int i = 0; i < m + 1; i++)
+	{
+		L[i] = new string[n + 1];
+	}
+
+	//for (int i = 0; i < m; i++) {
+	//	for (int j = 0; j < n; j++) {
+	//		L[i][j] = 'A';
+	//	}
+	//}
+
+	//for (int i = 0; i < m; i++) {
+	//	for (int j = 0; j < n; j++) {
+	//		cout << L[i][j];
+	//	}
+	//}
 
 	/* Careful of i-1, j-1 < 0! */
-	for (int i = 0; i < m; i++) {
-		for (int j = 0; j < n; j++) {
+	for (int i = 0; i < m + 1; i++) {
+		for (int j = 0; j < n + 1; j++) {
 			if (i <= 0 || j <= 0) {
-				L[i, j] = 0;
+				L[i][j] = "";
 			}
-			else if (A[i] == B[j])
+			else if (A[i - 1] == B[j - 1]) {
 				/* L[i,j] = L(A_i, B_j) */
-				L[i, j] = L[i - 1, j - 1] + A[i]; // Concatenate A[i] to L[i-1,j-1]
-			else {
-				len1 = sizeof(L[i, j - 1]);
-				len2 = sizeof(L[i - 1, j]);
-				if (len1 > len2)
-					L[i, j] = L[i, j - 1];
-				else
-					L[i, j] = L[i - 1, j];
+				L[i][j] = L[i - 1][j - 1] + "" +  A[i - 1]; // Concatenate A[i] to L[i-1,j-1]
 			}
+			else {
+				len1 = L[i][j - 1].length();
+				len2 = L[i - 1][j].length();
+				if (len1 > len2)
+					L[i][j] = L[i][j - 1];
+				else
+					L[i][j] = L[i - 1][j];
+			}
+			cout << L[i][j] << "\n";
 		}
 	}
-	//cout << L;
+	cout << "Final Table";
+	for (int i = 0; i < m + 1; i++) {
+		for (int j = 0; j < n + 1; j++) {
+			cout << L[i][j] << " ";
+		}
+		cout << "\n";
+	}
 }
 
 int main()
 {
-    std::cout << "Hello World!\n";
-	char A[] = "Hello";
-	char B[] = "Hi yo";
+	char A[] = "ABXTC";
+	char B[] = "AGXT";
 	serialLCS(A, B);
 }
 
